@@ -4,46 +4,76 @@ import '../blocs/login_bloc.dart';
 import '../repositories/auth_repository.dart';
 import 'dashboard_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({Key? key}) : super(key: key);
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider<LoginBloc>(
+      create: (_) => LoginBloc(authRepository: AuthRepository()),
+      child: BlocListener<LoginBloc, LoginState>(
+        listener: (context, state) {
+          if (state is LoginSuccess) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            );
+          }
+          if (state is LoginFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        child: const _LoginView(),
+      ),
+    );
+  }
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginView extends StatefulWidget {
+  const _LoginView({Key? key}) : super(key: key);
+
+  @override
+  State<_LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<_LoginView> {
   bool rememberMe = false;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => LoginBloc(authRepository: AuthRepository()),
-      child: Scaffold(
-        body: Stack(
-          children: [
-            // Background color
-            Container(color: const Color(0xFF0B0C69)),
+    return Scaffold(
+      body: Stack(
+        children: [
+          // 1) Background color
+          Container(color: const Color(0xFF0B0C69)),
 
-            // Background image with fade
-            Opacity(
-              opacity: 0.4,
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage("assets/images/bagobo_pattern.png"),
-                    fit: BoxFit.cover,
-                  ),
+          // 2) Faded pattern overlay
+          Opacity(
+            opacity: 0.4,
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("assets/images/bagobo_pattern.png"),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
+          ),
 
-            // Main UI content
-            Center(
-              child: SingleChildScrollView(
+          // 3) Centered, taller login card
+          Center(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 660,
+                  minHeight: 750,  // ↑ added minHeight
+                ),
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.95),
                     borderRadius: BorderRadius.circular(20),
@@ -51,33 +81,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset("assets/images/addu_seal.png", height: 80),
-                      const SizedBox(height: 8),
+                      Image.asset(
+                        "assets/images/addu_seal.png",
+                        height: 200,
+                      ),
+                      const SizedBox(height: 12),
                       const Text(
                         "UNIVENTS",
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 30,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
+                          letterSpacing: 3,
                           color: Color(0xFF0B0C69),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 60),
 
-                      BlocConsumer<LoginBloc, LoginState>(
-                        listener: (context, state) {
-                          if (state is LoginFailure) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(state.message)),
-                            );
-                          } else if (state is LoginSuccess) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const DashboardScreen()),
-                            );
-                          }
-                        },
+                      // Google Login Button / Spinner
+                      BlocBuilder<LoginBloc, LoginState>(
                         builder: (context, state) {
                           if (state is LoginLoading) {
                             return const CircularProgressIndicator();
@@ -85,8 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           return ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
-                              minimumSize: const Size.fromHeight(48),
+                              minimumSize: const Size.fromHeight(50),
                               side: const BorderSide(color: Colors.grey),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 12),
                             ),
                             onPressed: () {
                               context
@@ -98,9 +121,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 Image.network(
                                   'https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s48-fcrop64=1,00000000ffffffff-rw',
-                                  height: 24,
+                                  height: 40,
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 20),
                                 const Text(
                                   "Login with Google",
                                   style: TextStyle(color: Colors.black87),
@@ -111,23 +134,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 35),
 
+                      // Remember Me
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Switch(
                             value: rememberMe,
                             onChanged: (val) {
-                              setState(() {
-                                rememberMe = val;
-                              });
+                              setState(() => rememberMe = val);
                             },
                           ),
                           const Text("Remember Me"),
                         ],
                       ),
 
+                      const SizedBox(height: 30),
                       const Text.rich(
                         TextSpan(
                           text: "",
@@ -139,13 +161,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
+
+                      // extra space at bottom
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

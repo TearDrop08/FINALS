@@ -1,54 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/org_card.dart';
 import 'login_screen.dart';
-import 'event_detail_screen.dart';
-import 'event_form_screen.dart';
-import 'organization_list_screen.dart';   // ← make sure this exists
-import '../models/dashboard_card.dart';
+import 'organization_form_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+class OrganizationListScreen extends StatelessWidget {
+  const OrganizationListScreen({Key? key}) : super(key: key);
 
   Future<void> _logout(BuildContext ctx) async {
-    // If you’re using FirebaseAuth, uncomment:
-    // await FirebaseAuth.instance.signOut();
+    // await FirebaseAuth.instance.signOut(); // if you use FirebaseAuth
     Navigator.pushReplacement(
       ctx,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
   }
 
-  Future<void> _deleteEvent(String eventId) async {
+  Future<void> _deleteOrganization(String orgId) async {
     await FirebaseFirestore.instance
-        .collection('events')
-        .doc(eventId)
+        .collection('organizations')
+        .doc(orgId)
         .delete();
-    // (Optionally delete associated storage files here)
+    // Optionally: delete its banner from Storage here
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: const Text('Organizations'),
         backgroundColor: const Color(0xFF2E318F),
         actions: [
-          // ← ORGANIZATIONS BUTTON
-          IconButton(
-            icon: const Icon(Icons.business),
-            tooltip: 'Organizations',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const OrganizationListScreen(),
-                ),
-              );
-            },
-          ),
-
-          // ← LOGOUT BUTTON
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
@@ -57,59 +39,56 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
 
-      // STREAM & DISPLAY EVENTS
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection('events').snapshots(),
-        builder: (ctx, snap) {
-          if (snap.hasError) {
-            return Center(child: Text('Error: ${snap.error}'));
+        // ← here’s your fetch
+        stream: FirebaseFirestore.instance
+            .collection('organizations')
+            .snapshots(),
+        builder: (ctx, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
-          if (!snap.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          final docs = snap.data!.docs;
+
+          final docs = snapshot.data!.docs;
           if (docs.isEmpty) {
-            return const Center(child: Text('No events found.'));
+            return const Center(child: Text('No organizations found.'));
           }
 
-          // Responsive grid layout
+          // responsive grid
           return LayoutBuilder(builder: (ctx, constraints) {
             final width = constraints.maxWidth;
-            int cols = width > 1000
+            final crossCount = width > 1000
                 ? 3
                 : (width > 600 ? 2 : 1);
 
             return GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: cols,
+                crossAxisCount: crossCount,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 childAspectRatio: 4 / 3,
               ),
               itemCount: docs.length,
               itemBuilder: (context, i) {
-                final data    = docs[i].data();
-                final eventId = docs[i].id;
+                final data  = docs[i].data();
+                final orgId = docs[i].id;
 
                 return Stack(
                   children: [
-                    // Event card
-                    DashboardCard.fromMap(
+                    // your OrgCard
+                    OrgCard.fromMap(
                       data,
-                      eventId,
+                      orgId,
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                EventDetailScreen(eventId: eventId),
-                          ),
-                        );
+                        // optional detail screen
                       },
                     ),
 
-                    // Edit/Delete menu
+                    // edit / delete menu
                     Positioned(
                       top: 4,
                       right: 4,
@@ -119,21 +98,23 @@ class DashboardScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => EventFormScreen(
-                                  eventId: eventId,
-                                  initialData: data,
-                                ),
+                                builder: (_) =>
+                                    OrganizationFormScreen(
+                                      orgId: orgId,
+                                      initialData: data,
+                                    ),
                               ),
                             );
-                          } else if (choice == 'delete') {
-                            _deleteEvent(eventId);
+                          } else {
+                            _deleteOrganization(orgId);
                           }
                         },
                         itemBuilder: (_) => const [
                           PopupMenuItem(
                               value: 'edit', child: Text('Edit')),
                           PopupMenuItem(
-                              value: 'delete', child: Text('Delete')),
+                              value: 'delete',
+                              child: Text('Delete')),
                         ],
                       ),
                     ),
@@ -145,15 +126,15 @@ class DashboardScreen extends StatelessWidget {
         },
       ),
 
-      // FAB to add a new event
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF2E318F),
-        child: const Icon(Icons.add),
+        tooltip: 'Add Organization',
+        child: const Icon(Icons.add_business),
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const EventFormScreen(),
+              builder: (_) => const OrganizationFormScreen(),
             ),
           );
         },

@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
               backgroundColor: Color(0xFF0B0C69),
             ),
           ),
-          home: const DashboardScreen(),
+          home: const LoginScreen(),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:finals/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,12 +30,12 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'ADDU Events Admin',
           theme: ThemeData(
-            primaryColor: const Color(0xFF2E318F),
+            primaryColor: const Color(0xFF0B0C69),
             appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFF2E318F),
+              backgroundColor: Color(0xFF0B0C69),
             ),
           ),
-          home: const LoginScreen(),
+          home: const DashboardScreen(),
         ),
       ),
     );

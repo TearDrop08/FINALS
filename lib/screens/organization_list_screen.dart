@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../models/org_card.dart';
 import 'login_screen.dart';
 import 'organization_form_screen.dart';
@@ -9,27 +8,30 @@ class OrganizationListScreen extends StatelessWidget {
   const OrganizationListScreen({Key? key}) : super(key: key);
 
   Future<void> _logout(BuildContext ctx) async {
-    // await FirebaseAuth.instance.signOut(); // if you use FirebaseAuth
     Navigator.pushReplacement(
       ctx,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
   }
 
-  Future<void> _deleteOrganization(String orgId) async {
+  Future<void> _hideOrganization(String orgId) async {
     await FirebaseFirestore.instance
         .collection('organizations')
         .doc(orgId)
-        .delete();
-    // Optionally: delete its banner from Storage here
+        .update({'hidden': true});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Organizations'),
-        backgroundColor: const Color(0xFF2E318F),
+        title: const Text(
+          'Organizations',
+          style: TextStyle(color: Colors.white), // Title text color set to white
+        ),
+        backgroundColor: const Color(0xFF0B0C69),
+        iconTheme: const IconThemeData(color: Colors.white), // Leading icons white
+        actionsIconTheme: const IconThemeData(color: Colors.white), // Action icons white
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -40,13 +42,12 @@ class OrganizationListScreen extends StatelessWidget {
       ),
 
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        // ← here’s your fetch
         stream: FirebaseFirestore.instance
             .collection('organizations')
             .snapshots(),
         builder: (ctx, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('Error: \${snapshot.error}'));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -57,7 +58,6 @@ class OrganizationListScreen extends StatelessWidget {
             return const Center(child: Text('No organizations found.'));
           }
 
-          // responsive grid
           return LayoutBuilder(builder: (ctx, constraints) {
             final width = constraints.maxWidth;
             final crossCount = width > 1000
@@ -74,21 +74,18 @@ class OrganizationListScreen extends StatelessWidget {
               ),
               itemCount: docs.length,
               itemBuilder: (context, i) {
-                final data  = docs[i].data();
+                final data = docs[i].data();
                 final orgId = docs[i].id;
 
                 return Stack(
                   children: [
-                    // your OrgCard
                     OrgCard.fromMap(
                       data,
                       orgId,
                       onTap: () {
-                        // optional detail screen
                       },
                     ),
 
-                    // edit / delete menu
                     Positioned(
                       top: 4,
                       right: 4,
@@ -98,23 +95,19 @@ class OrganizationListScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    OrganizationFormScreen(
-                                      orgId: orgId,
-                                      initialData: data,
-                                    ),
+                                builder: (_) => OrganizationFormScreen(
+                                  orgId: orgId,
+                                  initialData: data,
+                                ),
                               ),
                             );
-                          } else {
-                            _deleteOrganization(orgId);
+                          } else if (choice == 'hide') {
+                            _hideOrganization(orgId);
                           }
                         },
                         itemBuilder: (_) => const [
-                          PopupMenuItem(
-                              value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(
-                              value: 'delete',
-                              child: Text('Delete')),
+                          PopupMenuItem(value: 'edit', child: Text('Edit')),
+                          PopupMenuItem(value: 'hide', child: Text('Hide')),
                         ],
                       ),
                     ),
@@ -127,9 +120,9 @@ class OrganizationListScreen extends StatelessWidget {
       ),
 
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF2E318F),
+        backgroundColor: const Color(0xFF0B0C69),
         tooltip: 'Add Organization',
-        child: const Icon(Icons.add_business),
+        child: const Icon(Icons.add_business, color: Colors.white),
         onPressed: () {
           Navigator.push(
             context,

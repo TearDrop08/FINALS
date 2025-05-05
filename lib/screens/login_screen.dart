@@ -45,10 +45,8 @@ class _LoginViewState extends State<_LoginView> {
     return Scaffold(
       body: Stack(
         children: [
-          // 1) Background color
           Container(color: const Color(0xFF0B0C69)),
 
-          // 2) Faded pattern overlay
           Opacity(
             opacity: 0.4,
             child: Container(
@@ -61,7 +59,6 @@ class _LoginViewState extends State<_LoginView> {
             ),
           ),
 
-          // 3) Centered, taller login card
           Center(
             child: SingleChildScrollView(
               child: ConstrainedBox(
@@ -97,7 +94,6 @@ class _LoginViewState extends State<_LoginView> {
                       ),
                       const SizedBox(height: 60),
 
-                      // Google Login Button / Spinner
                       BlocBuilder<LoginBloc, LoginState>(
                         builder: (context, state) {
                           if (state is LoginLoading) {

@@ -1,6 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-/// A simple Dart model for your /organizations documents.
 class Organization {
   final String id;
   final String name;
@@ -16,7 +14,6 @@ class Organization {
     required this.createdAt,
   });
 
-  /// Builds an Organization from Firestore data + its document ID
   factory Organization.fromMap(Map<String, dynamic> data, String id) {
     final ts = data['createdAt'];
     return Organization(
@@ -28,7 +25,6 @@ class Organization {
     );
   }
 
-  /// Serializes back into a Firestore‐ready map
   Map<String, dynamic> toMap() {
     return {
       'name':        name,

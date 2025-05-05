@@ -22,13 +22,13 @@ class EventDetailScreen extends StatelessWidget {
       builder: (ctx, snap) {
         if (snap.hasError) {
           return Scaffold(
-            appBar: AppBar(backgroundColor: const Color(0xFF2E318F)),
+            appBar: AppBar(backgroundColor: const Color(0xFF0B0C69)),
             body: Center(child: Text('Error: ${snap.error}')),
           );
         }
         if (!snap.hasData) {
           return Scaffold(
-            appBar: AppBar(backgroundColor: const Color(0xFF2E318F)),
+            appBar: AppBar(backgroundColor: const Color(0xFF0B0C69)),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -37,14 +37,14 @@ class EventDetailScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(evt.title),
-            backgroundColor: const Color(0xFF2E318F),
+            iconTheme: const IconThemeData(color: Colors.white),
+            title: Text(evt.title, style: TextStyle(color: Colors.white),),
+            backgroundColor: const Color(0xFF0B0C69),
           ),
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image carousel
                 SizedBox(
                   height: 250,
                   child: evt.imageUrls.isEmpty
@@ -60,7 +60,6 @@ class EventDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Title
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
@@ -73,7 +72,6 @@ class EventDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
 
-                // Dates
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
@@ -84,7 +82,6 @@ class EventDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Description
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(evt.description),
